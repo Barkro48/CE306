@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <title>แปลงสกุลเงิน</title>
+  <style>
+    body { 
+      font-family: Arial, sans-serif; 
+      margin: 0; 
+      padding: 0; 
+      display: flex; 
+      justify-content: center; 
+      align-items: center; 
+      height: 100vh; 
+      background: #5f19c7;
+    
+    }
+    .container {
+      text-align: center;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      width: 400px;
+      background: #ffffff;
+    }
+    .converter { margin-bottom: 30px; }
+    .converter input, .converter select {
+      margin: 5px;
+      padding: 8px;
+    }
+    .history { margin-top: 30px; text-align: left; }
+    .history ul { list-style: none; padding: 0; }
+    .history li { margin: 5px 0; }
+    button { margin: 5px; padding: 8px 12px;
+    background: #f30707; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>แปลงสกุลเงิน</h2>
+
+    <div class="converter">
+      <input id="amount-one" type="number" placeholder="จำนวนเงินต้นทาง">
+      <select id="currency-one">
+        <option value="THB">THB</option>
+        <option value="USD">USD</option>
+      </select>
+      <br>
+      <input id="amount-two" type="number" placeholder="จำนวนเงินปลายทาง">
+      <select id="currency-two">
+        <option value="USD">USD</option>
+        <option value="THB">THB</option>
+      </select>
+    </div>
+
+    <p id="rate">อัตราแลกเปลี่ยนจะปรากฏที่นี่</p>
+    <p id="last-update">อัปเดตล่าสุด: -</p>
+
+    <button id="clear-btn">ล้างข้อมูล</button>
+    <button id="clear-history-btn">ล้างประวัติ</button>
+
+    <div class="history">
+      <h3>ประวัติการแปลงเงินย้อนหลัง 10 รายการล่าสุด</h3>
+      <ul id="history-list"></ul>
+    </div>
+  </div>
+
+  <script>
+    const amountOne = document.getElementById("amount-one");
+    const currencyOne = document.getElementById("currency-one");
+    const amountTwo = document.getElementById("amount-two");
+    const currencyTwo = document.getElementById("currency-two");
+    const rateText = document.getElementById("rate");
+    const lastUpdate = document.getElementById("last-update");
+    const historyList = document.getElementById("history-list");
+
+    let exchangeRate = 0.02817;
+    let history = [];
+    let isUpdating = false;
+
+    function updateRate() {
+      exchangeRate = 0.02817; 
+      rateText.textContent = `1 ${currencyOne.value} = ${exchangeRate} ${currencyTwo.value}`;
+      lastUpdate.textContent = "อัปเดตล่าสุด: " + new Date().toLocaleString("th-TH");
+    }
+
+    function convertFromOne() {
+      if (isUpdating) return;
+      isUpdating = true;
+      amountTwo.value = (amountOne.value * exchangeRate).toFixed(2);
+      addHistory(`${amountOne.value} ${currencyOne.value} → ${amountTwo.value} ${currencyTwo.value}`);
+      isUpdating = false;
+    }
+
+    function convertFromTwo() {
+      if (isUpdating) return;
+      isUpdating = true;
+      amountOne.value = (amountTwo.value / exchangeRate).toFixed(2);
+      addHistory(`${amountOne.value} ${currencyOne.value} ← ${amountTwo.value} ${currencyTwo.value}`);
+      isUpdating = false;
+    }
+
+    function addHistory(entry) {
+      if (!entry.includes("NaN")) {
+        history.push(entry);
+        if (history.length > 10) history.shift();
+        renderHistory();
+      }
+    }
+
+    function renderHistory() {
+      historyList.innerHTML = "";
+      history.forEach(item => {
+        const li = document.createElement("li");
+        li.textContent = item;
+        historyList.appendChild(li);
+      });
+    }
+
+    document.getElementById("clear-btn").addEventListener("click", () => {
+      amountOne.value = "";
+      amountTwo.value = "";
+      rateText.textContent = "อัตราแลกเปลี่ยนจะปรากฏที่นี่";
+      lastUpdate.textContent = "อัปเดตล่าสุด: -";
+    });
+
+    document.getElementById("clear-history-btn").addEventListener("click", () => {
+      history = [];
+      renderHistory();
+    });
+
+    amountOne.addEventListener("input", convertFromOne);
+    amountTwo.addEventListener("input", convertFromTwo);
+    currencyOne.addEventListener("change", updateRate);
+    currencyTwo.addEventListener("change", updateRate);
+
+    updateRate();
+  </script>
+</body>
+</html>
